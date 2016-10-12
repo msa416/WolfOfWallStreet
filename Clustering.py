@@ -95,22 +95,37 @@ nodePointers = {src:src for src in graph.edges}
 nodeBottom = {src:True for src in graph.edges}
 nodeTop = {src:True for src in graph.edges}
 
+def findbottom(node):
+    source = node
+    destination = nodePointers[source]
+    if nodeBottom[destination]:
+        return destination
+    else:
+        return findbottom(destination)
 
 counter = 0
 
 for k in sortedWeights:
-	if counter < 2:
-		if nodePointers[k[0]] == k[0]:
-			nodePointers[k[0]] = k[1]
-			nodeBottom[k[0]] = False
-			nodeTop[k[1]] = False
-			print(nodePointers)
-			print(nodeBottom)
-			print(nodeTop)
-		counter += 1
-#Potential implementation of only able to connect bottom chains???
-#According to Heikki we get the same answer either way but we should follow his algorighm as closely as possible
-#aka instead of connecting b to c, we see that c connects to d which is a bottom node, so connect bottom node b with bottom node d .
+    if counter < 4:
+        if nodePointers[k[0]] == k[0]:
+            print (nodeBottom[k[1]], k[1])
+            if nodeBottom[k[1]]:
+                nodePointers[k[0]] = k[1]
+                nodeBottom[k[0]] = False
+                nodeTop[k[1]] = False
+            else:
+                bottom = findbottom(k[1])
+                nodePointers[bottom] = k[0]
+                nodeBottom[bottom] = False
+
+
+
+            print(nodePointers)
+            print(nodeBottom)
+            print(nodeTop)
+            
+        counter += 1
+
 #Now have top and bottom of chains. How to connect the two sets?
 		
 
