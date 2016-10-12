@@ -90,32 +90,29 @@ for x in input:
 	graph.addEdge(x[0],x[1],x[2])
 #print(graph)
 
+
 nodePointers = {src:src for src in graph.edges}
+nodeBottom = {src:True for src in graph.edges}
 nodeTop = {src:True for src in graph.edges}
-#print (nodePointers)
-#print (nodeStart)
+
 
 counter = 0
 
 for k in sortedWeights:
-	if counter < 3:
+	if counter < 2:
 		if nodePointers[k[0]] == k[0]:
 			nodePointers[k[0]] = k[1]
+			nodeBottom[k[0]] = False
 			nodeTop[k[1]] = False
 			print(nodePointers)
+			print(nodeBottom)
 			print(nodeTop)
 		counter += 1
-
-nodeBottom = {src:False for src in graph.edges}
-
-for k in nodePointers:
-	if k == nodePointers[k]:
-		nodeBottom[k] = True
-print(nodeBottom)
-
-#Now have top and bottom of chains. How to connect...?
-
-
+#Potential implementation of only able to connect bottom chains???
+#According to Heikki we get the same answer either way but we should follow his algorighm as closely as possible
+#aka instead of connecting b to c, we see that c connects to d which is a bottom node, so connect bottom node b with bottom node d .
+#Now have top and bottom of chains. How to connect the two sets?
+		
 
 
 
