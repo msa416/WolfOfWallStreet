@@ -16,6 +16,34 @@ for company in priceData:
 percent_change = priceData.pct_change()
 #print(percent_change)
 
+def covariance(x,y):
+    mean_x=np.mean(x)
+    mean_y=np.mean(y)
+    return np.mean((x-mean_x)*(y-mean_y))
+
+
+def correlation(x,y):
+    return covariance(x,y)/(np.std(x)*np.std(y))
+
+
+correlation_coefficient = {}
+    
+for company1 in percent_change:
+    correlation_coefficient[company1]={}
+    for company2 in percent_change:
+        x=percent_change[company1]        
+        y=percent_change[company2]
+        if company1==company2:
+            correlation_coefficient[company1][company2]=1
+        else:
+            correlation_coefficient[company1][company2]=correlation(x,y)
+        
+print(correlation_coefficient['AAPL']['MMM'])
+#Verify coefficient calculation
+correlations = percent_change.corr()
+print(correlations.get_value('AAPL','MMM'))
+
+
 correlations = percent_change.corr()
 
 correlations = correlations.where(np.triu(np.ones(correlations.shape)).astype(np.bool))
