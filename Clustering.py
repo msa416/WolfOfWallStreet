@@ -83,7 +83,7 @@ def mergeSort(array):
 			k += 1
 	return(array)
 sortedWeights = mergeSort(input)
-print(sortedWeights)
+print("sortedweights",sortedWeights)
 
 graph = Digraph()
 for x in input:
@@ -91,35 +91,35 @@ for x in input:
 #print(graph)
 
 nodePointers = {src:src for src in graph.edges}
+nodeTop = {src:True for src in graph.edges}
+#print (nodePointers)
+#print (nodeStart)
 
-print (nodePointers)
-
-for k in sortedWeights:
-
-	#only connect sink nodes
-	nodePointers[k[0]] = k[1]
-	print(nodePointers)
-
-#how to recover sets
-
-#print(nodePointers)
-
-'''
-listSets = []
-for src in graph.edges:
-	listSets.append(set(src))
-#print(listSets)
-
-
+counter = 0
 
 for k in sortedWeights:
-	source = k[0]
-	destination = k[1]
-	#print(source,destination)
-	for element in listSets:
-		if source in element:
-			element.pop()
-		#print(listSets)
+	if counter < 3:
+		if nodePointers[k[0]] == k[0]:
+			nodePointers[k[0]] = k[1]
+			nodeTop[k[1]] = False
+			print(nodePointers)
+			print(nodeTop)
+		counter += 1
 
-'''
+nodeBottom = {src:False for src in graph.edges}
+
+for k in nodePointers:
+	if k == nodePointers[k]:
+		nodeBottom[k] = True
+print(nodeBottom)
+
+#Now have top and bottom of chains. How to connect...?
+
+
+
+
+
+
+
+
 
