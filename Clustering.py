@@ -24,63 +24,6 @@ correlations.columns = ['Company1', 'Company2', 'Correlation']
 
 correlation_tuples = [tuple(x) for x in correlations.values]
 
-
-class Digraph():
-    #edges is a dict mapping each node to a dictionary of edges starting from it
-    def __init__(self,filename = None):
-        self.edges = {}
-        self.numEdges = 0
-    
-    def addNode(self,node):
-        # add a vertex to graph (based on key value)       
-        self.edges[node] = set()
-
-    def addEdge(self,src,dest,weight):
-        # add the (v,w) edge, making sure the two nodes exist
-        if not self.hasNode(src): 
-            self.addNode(src)
-            self.edges[src] = {}
-        if not self.hasNode(dest): 
-            self.addNode(dest)
-            self.edges[dest] = {}
-        if not self.hasEdge(src, dest):
-            self.numEdges += 1
-            self.edges[src][dest] = weight
-  
-    def childrenOf(self, v):
-        # Returns a node's children
-        return self.edges[v].items()
-        
-    def hasNode(self, v):
-        return v in self.edges
-        
-    def hasEdge(self, v, w):
-        return w in self.edges[v]
-
-    def listEdges(self):
-        ll = []
-        for src,values in self.edges.items():
-            for dest,weight in values.items():
-                ll.append([src,dest,weight])
-        return ll
-    
-    def __str__(self):
-        result = ''
-        for src in self.edges:
-            for dest,weight in self.edges[src].items():
-                result = result + src + '->'\
-                         + dest + ', length ' + str(weight) + '\n'
-        return result[:-1] # omit final newline
-
-class Graph(Digraph):
-    """ Undirected graph: two one-way edges for every edge
-        """
-    def addEdge(self, src, dest,weight):
-        Digraph.addEdge(self, src, dest,weight)
-        Digraph.addEdge(self, dest, src,weight)
-
-input = [('a','b',.8),('a','c',.63),('c','d',.95),('b','d',.32),('b','c',.68),('a','d',.05)]
-
 def mergeSort(array):
 	if len(array) > 1:
 		mid = len(array) //2
@@ -109,50 +52,89 @@ def mergeSort(array):
 			j += 1
 			k += 1
 	return(array)
-input = mergeSort(input)
-#sortedWeights = mergeSort(correlation_tuples)
 
+
+#input = [('a','b',.8),('a','c',.63),('c','d',.95),('b','d',.32),('b','c',.68),('a','d',.05)]
+#print(input)
+
+# Sort the correlations between all pairs of stocks in descending order
+sortedWeights = mergeSort(correlation_tuples)
+print("Sorted Weights", sortedWeights)
+
+# Create the graph as follows:
+    # 1. The nodes of the graph are the stocks
+    # 2. The edges between them are the correlations
 graph = Digraph()
-for x in input:
-#for x in sortedWeights
+for x in sortedWeights:
 	graph.addEdge(x[0],x[1],x[2])
-#print(graph)
+print(graph)
 
-
+# Create a single node set from each node in the graph
+# Initialize a dictionary where each node points to itself
 nodePointers = {src:src for src in graph.edges}
+# Initialize a dictionary to store the starting nodes
+# As a start, every node is labeled as a starting node
+nodeStarting = {src:True for src in graph.edges}
+# Initialize a dictionary to store the bottom nodes (that point to themselves)
+# As a start, every node is labeled as a bottom node
 nodeBottom = {src:True for src in graph.edges}
-nodeTop = {src:True for src in graph.edges}
 
-def findbottom(node): #function doesn't work. the else is broken with the recursion...
+# Define a function to find the bottom node
+def findbottom(node):
     source = node
     destination = nodePointers[source]
-    if nodeBottom[destination]:
-        return destination
-    else:
-        return findbottom(destination)
+    while destination != source: # repeat until reaching a node that points to itself
+        source = destination
+        destination = nodePointers[source]
+    return destination
 
-counter = 0
+# Define a function that performs set merging
+def mergeSets(k):
+    counter = 0
+    for key in sortedWeights:
+        if counter < k:
+            if nodePointers[key[0]] == key[0]: # source node points to itself
+                if nodeBottom[key[1]]: # destination is the bottom node
+                    # merge the sets containing the source and the destination of the edge
+                    nodePointers[key[0]] = key[1]
+                    nodeBottom[key[0]] = False
+                    nodeStarting[key[1]] = False
+                else: # destination is not the bottom node
+                    # find bottom node
+                    bottom = findbottom(key[1])
+                    # make the bottom node point to the other node
+                    nodePointers[bottom] = key[0]
+                    nodeBottom[bottom] = False
+    
+                print(nodePointers)
+                print(nodeBottom)
+                print(nodeStarting)
+                
+            counter += 1
 
-for k in sortedWeights:
-	if k[0] != k[1]:
-		if counter < 4:
-			if nodePointers[k[0]] == k[0]:
-				print (nodeBottom[k[1]], k[1])
-				if nodeBottom[k[1]]:
-					nodePointers[k[0]] = k[1]
-					nodeBottom[k[0]] = False
-					nodeTop[k[1]] = False
-				else:
-					bottom = findbottom(k[1])
-					nodePointers[bottom] = k[0]
-					nodeBottom[bottom] = False
+mergeSets(4)
 
+# Define a function to recover the set using bottom and starting nodes
+dict = {}
+def recoverSets():
+    for b_key, b_value in nodeBottom.items(): # loop over the bottom nodes dictionary
+        if b_value: # the node is a bottom node
+            dict.setdefault(b_key,[]) # add the bottom node as a key to dict
+            for s_key, s_value in nodeStarting.items(): # loop over the starting nodes dictionary
+                if s_value: # the node is a starting node
+                    bottom = findbottom(s_key)
+                    # set the current node to be the starting node
+                    current_node = s_key
+                    while current_node != bottom:
+                        # append the current node to the list corresponding to the bottom node in dict
+                        dict[b_key].append(current_node)
+                        # change current node to be the node the current node is pointing to
+                        current_node = nodePointers[current_node]
+            # append the bottom node to the list if the list is not empty
+            # it means that we have nodes pointing to the bottom node
+            if bool(dict[b_key]):
+                dict[b_key].append(b_key)
+    return list(dict.values())
+                
+cluster = recoverSets()
 
-
-			print(nodePointers)
-			print(nodeBottom)
-			print(nodeTop)
-		counter += 1
-		
-#Now have top and bottom of chains. How to connect the two sets?
-		
